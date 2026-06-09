@@ -31,12 +31,14 @@ export class DashboardComponent {
       .reduce((sum, a) => sum + a.value, 0);
   });
 
+  // Total water intake
   readonly totalWater = computed(() => {
     return this.activities()
       .filter(a => a.type === 'HYDRATATION')
       .reduce((sum, a) => sum + a.value, 0);
   });
 
+  // Remaining daily calories
   readonly remainingCalories = computed(() => {
     return this.dailyCalorieGoal - this.totalCalories();
   });
@@ -117,21 +119,5 @@ export class DashboardComponent {
 
   deleteActivity(id: string) {
     this.activities.update(prev => prev.filter(a => a.id !== id));
-  }
-
-  loadDemoData() {
-    const now = Date.now();
-    const demo: Activity[] = [
-      { id: 'demo-1', name: 'Séance de Fitness', type: 'SPORT', value: 350, createdAt: now - 3600000 * 3 },
-      { id: 'demo-2', name: 'Grand verre d\'eau', type: 'HYDRATATION', value: 400, createdAt: now - 3600000 * 2 },
-      { id: 'demo-3', name: 'Bouteille d\'eau midi', type: 'HYDRATATION', value: 800, createdAt: now - 3600000 * 1 }
-    ];
-    this.activities.set(demo);
-  }
-
-  clearAll() {
-    if (confirm('Voulez-vous vraiment vider tout le journal d\'aujourd\'hui ?')) {
-      this.activities.set([]);
-    }
   }
 }
