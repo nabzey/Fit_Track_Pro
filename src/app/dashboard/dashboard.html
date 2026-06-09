@@ -30,6 +30,7 @@
                 id="act-name" 
                 name="activityName" 
                 [(ngModel)]="activityName" 
+                (ngModelChange)="errorMessage.set('')"
                 placeholder="Ex: Footing, Verre d'eau" 
                 required
                 autocomplete="off"
@@ -40,12 +41,12 @@
               <label>Type d'activité</label>
               <div class="type-selector">
                 <label class="type-option sport-option" [class.active]="activityType === 'SPORT'">
-                  <input type="radio" name="activityType" value="SPORT" [(ngModel)]="activityType" />
+                  <input type="radio" name="activityType" value="SPORT" [(ngModel)]="activityType" (change)="errorMessage.set('')" />
                   <span class="icon">🔥</span>
                   <span class="label">Sport</span>
                 </label>
                 <label class="type-option water-option" [class.active]="activityType === 'HYDRATATION'">
-                  <input type="radio" name="activityType" value="HYDRATATION" [(ngModel)]="activityType" />
+                  <input type="radio" name="activityType" value="HYDRATATION" [(ngModel)]="activityType" (change)="errorMessage.set('')" />
                   <span class="icon">💧</span>
                   <span class="label">Hydratation</span>
                 </label>
@@ -66,6 +67,7 @@
                   id="act-value" 
                   name="activityValue" 
                   [(ngModel)]="activityValue" 
+                  (ngModelChange)="errorMessage.set('')"
                   [placeholder]="activityType === 'SPORT' ? 'Ex: 350' : 'Ex: 250'" 
                   min="1"
                   required
@@ -79,6 +81,10 @@
             <button type="submit" id="btn-submit-activity" class="btn btn-primary">
               Ajouter au journal
             </button>
+
+            @if (errorMessage()) {
+              <p id="error-message" class="error-message">{{ errorMessage() }}</p>
+            }
           </form>
         </div>
 

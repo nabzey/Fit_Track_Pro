@@ -21,6 +21,9 @@ export class DashboardComponent {
   activityType: 'SPORT' | 'HYDRATATION' = 'SPORT';
   activityValue: number | null = null;
 
+  // Validation Error Message
+  readonly errorMessage = signal<string>('');
+
   // Constants
   readonly dailyCalorieGoal = 2000;
 
@@ -91,15 +94,18 @@ export class DashboardComponent {
     const value = this.activityValue;
 
     if (!name) {
-      alert('Veuillez saisir un nom pour l\'activité.');
+      this.errorMessage.set("Veuillez saisir un nom pour l'activité.");
       return;
     }
 
     if (value === null || value <= 0) {
       const unit = type === 'SPORT' ? 'calories' : 'ml';
-      alert(`Veuillez entrer une valeur positive pour les ${unit}.`);
+      this.errorMessage.set(`Veuillez entrer une valeur positive pour les ${unit}.`);
       return;
     }
+
+    // Reset error message on success
+    this.errorMessage.set('');
 
     const newActivity: Activity = {
       id: Date.now().toString() + Math.random().toString(36).substring(2, 9),

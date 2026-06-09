@@ -541,3 +541,11 @@
 .empty-state p {
   font-size: 0.8rem;
 }
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  text-align: center;
+}
