@@ -1,68 +1,56 @@
 # Fit Track Pro - Module "Bilan Journalier"
 
-Ce projet est une application web moderne et réactive développée avec **Angular 21**, conçue pour aider les utilisateurs à suivre leurs indicateurs physiques quotidiens. Elle propose un tableau de bord performant permettant de saisir des activités, de visualiser un journal chronologique, d'obtenir des statistiques en temps réel et de recevoir des alertes de santé intelligentes.
+Ce projet est une application web réactive développée avec **Angular 21**, conçue pour suivre les indicateurs physiques quotidiens. Elle propose un tableau de bord modulaire permettant de saisir des activités, de visualiser un journal chronologique, d'obtenir des statistiques en temps réel et d'afficher des alertes de santé.
 
 ---
 
-## 1. Objectifs & Fonctionnalités
+## 1. Architecture du Code
 
-L'application s'articule autour d'un tableau de bord interactif divisé en quatre axes principaux :
+Pour éviter de surcharger le composant racine `App`, le code est divisé en plusieurs fichiers distincts et indépendants :
 
-### A. Enregistrement des Activités
-* **Formulaire réactif et intuitif** : Permet de saisir rapidement une nouvelle activité.
-* **Propriétés d'une activité** :
-  * **Nom** : Libellé descriptif (ex: *Jogging matinal*, *Grand verre d'eau*).
-  * **Type d'activité** : Sélection entre `SPORT` (dépense énergétique) et `HYDRATATION` (apport hydrique).
-  * **Valeur numérique** : S'adapte dynamiquement selon le type (calories brûlées en **kcal** pour le sport, ou volume en **ml** pour l'hydratation).
+* **`src/app/activity.model.ts`** : Interface TypeScript partagée qui définit la structure stricte d'une activité (`id`, `name`, `type`, `value`, `createdAt`).
+* **`src/app/dashboard/`** (Nouveau composant) :
+  * **`dashboard.ts`** : Contient toute la logique métier, la gestion d'état avec les **Signals** d'Angular, les propriétés dérivées (`computed`) et la persistance locale (`effect` + `localStorage` sécurisé pour le SSR).
+  * **`dashboard.html`** : Structure HTML utilisant la nouvelle syntaxe de contrôle de flux d'Angular (`@if`, `@else`, `@for ... track` et `@empty`).
+  * **`dashboard.css`** : Charte graphique moderne avec des **couleurs unies simples** (sans dégradé), conforme aux attentes visuelles.
+* **`src/app/app.ts` & `app.html`** : Point d'entrée de l'application. Très léger, il se contente d'importer et d'afficher le sélecteur `<app-dashboard></app-dashboard>`.
 
-### B. Indicateurs en Temps Réel (Dashboard)
-Trois indicateurs clés sont recalculés instantanément à chaque ajout ou modification :
-1. **Total des calories brûlées** (somme des calories de toutes les activités de type `SPORT`).
-2. **Total de l'eau consommée** (somme des volumes de toutes les activités de type `HYDRATATION`).
-3. **Bilan calorique restant** : Calculé par rapport à un objectif quotidien par défaut de **2000 kcal** (`Objectif - Calories Brûlées`).
+---
+
+## 2. Fonctionnalités Implémentées
+
+### A. Formulaire & Validation Intégrée
+* L'utilisateur peut saisir un nom d'activité, sélectionner son type (`SPORT` ou `HYDRATATION`) et renseigner sa valeur (en kcal pour le sport, ou en ml pour l'eau).
+* **Validation Inline** : Contrairement aux alertes pop-up système intrusives, les erreurs de saisie (champ vide, valeur négative ou nulle) s'affichent sous forme de **message textuel rouge et dynamique** sous le bouton d'ajout. Ce message disparait automatiquement dès que l'utilisateur recommence à écrire ou à modifier le formulaire.
+
+### B. Indicateurs en Temps Réel
+Trois indicateurs clés sont mis à jour instantanément à chaque ajout ou suppression d'activité :
+1. **Calories brûlées** (somme des activités de type `SPORT`).
+2. **Eau consommée** (somme des activités de type `HYDRATATION`).
+3. **Bilan calorique restant** : calculé sur la base d'un objectif fixe de **2000 kcal** (`Objectif - Calories brûlées`).
 
 ### C. Alertes de Santé Intelligentes
-Le système évalue en continu l'état de l'utilisateur et affiche des messages dynamiques :
-* **Avertissement critique (Déshydratation)** : Visible tant que le volume total d'eau est **strictement inférieur à 1500 ml**.
-* **Félicitations ("Objectif Santé Atteint")** : S'affiche dès que le volume d'eau atteint ou dépasse **1500 ml** **ET** que les calories brûlées dépassent **500 kcal**. L'avertissement de déshydratation disparaît alors au profit de ce badge de réussite.
-* **État d'encouragement intermédiaire** : Si l'hydratation est atteinte ($\ge 1500$ ml) mais que la dépense physique est encore insuffisante ($\le 500$ kcal), un message encourage l'utilisateur à bouger.
+Évaluation en temps réel de l'état de l'utilisateur :
+* **Déshydratation (Alerte)** : S'affiche tant que le volume total d'eau est **strictement inférieur à 1500 ml**.
+* **Objectif Santé Atteint (Félicitations)** : Remplace l'alerte dès que le volume d'eau atteint ou dépasse **1500 ml** **ET** que la dépense physique dépasse **500 kcal**.
+* **Statut intermédiaire** : S'affiche si l'eau atteint 1500 ml mais que les calories brûlées sont inférieures ou égales à 500 kcal (encourage à faire du sport).
 
-### D. Persistance Locale
-* **Sauvegarde automatique** : Pour éviter toute perte de données lors d'un rafraîchissement accidentel (`F5`), l'état de l'application est automatiquement persisté dans le `localStorage` du navigateur.
-* **Compatibilité SSR (Server-Side Rendering)** : Le chargement et la sauvegarde du stockage local sont sécurisés pour éviter les erreurs lors de l'exécution côté serveur (SSR).
-
----
-
-## 2. Contraintes & Choix Techniques (Angular 21)
-
-L'architecture repose exclusivement sur les fonctionnalités modernes d'Angular :
-
-1. **Composants Standalone** :
-   * Configuration sans `NgModule`. Le composant principal `App` configure directement ses dépendances via le tableau `imports`.
-2. **Gestion de l'état avec les Signals** :
-   * L'état des activités est stocké dans un signal réactif : `readonly activities = signal<Activity[]>(...)`.
-   * Les totaux et les alertes de santé sont calculés de manière dérivée avec `computed()`. Cela garantit que les calculs ne sont réévalués que lorsque le signal source change.
-3. **Nouveau Control Flow** :
-   * Utilisation de la syntaxe native d'Angular `@if`, `@else` et `@for` avec la clé de suivi `track activity.id` pour une réactivité optimale du DOM.
-4. **Hydratation & Sécurité SSR** :
-   * Utilisation de `PLATFORM_ID` et `isPlatformBrowser` pour sécuriser les accès à `localStorage`.
+### D. Persistance SSR-Safe
+* Les activités sont enregistrées automatiquement dans le `localStorage` du navigateur.
+* Les accès au `localStorage` sont protégés par une vérification `isPlatformBrowser` afin de ne pas perturber le rendu côté serveur (SSR).
 
 ---
 
-## 3. Guide de Démarrage et Commandes
+## 3. Commandes du Projet
 
-### Démarrer le serveur de développement
+### Lancer le serveur de développement
 ```bash
 npm start
 ```
-Une fois démarré, ouvrez votre navigateur à l'adresse `http://localhost:4200/`.
-
-### Lancer la compilation de production
-```bash
-npm run build
-```
+L'application est alors accessible à l'adresse `http://localhost:4200/`.
 
 ### Lancer les tests unitaires (Vitest)
 ```bash
 npm run test
 ```
+Les tests valident la création du composant, la réactivité des calculs de Signals/Computed et le fonctionnement de la validation du formulaire.
